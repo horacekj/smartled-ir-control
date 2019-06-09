@@ -34,9 +34,9 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Zadání}
 
-Vytvořte systém umožňující ovládání SmartLED pásku pomocí standardního IR
-dálkového ovladače. Pochopte a implementujte komunikační protokoly SmartLED
-pásků a IR dálkového ovladače.
+Vytvořte systém umožňující ovládání \textit{SmartLED} pásku pomocí standardního
+IR dálkového ovladače. Pochopte a implementujte komunikační protokoly
+\textit{SmartLED} pásků a~IR dálkového ovladače.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Popis řešení}
@@ -44,13 +44,13 @@ pásků a IR dálkového ovladače.
 Vypracované řešení staví na desce \textit{YuniPIC}, kterou jsme využívali
 v~předmětu PB171 během semestru. Řešení nevyužívá žádných specialit desky,
 tato deska byla zvolena pro její snadnou dostupnost. Řešení je psáno na míru
-procesoru PIC18F46K22. Projekt využívá asi nejrozšířenější chytré LED diody
-\textit{WS2812B}, jako IR protokol byl použit rozšířený \textit{NEC IR}.
+procesoru \textit{PIC18F46K22}. Projekt využívá asi nejrozšířenější chytré LED
+diody \textit{WS2812B}, jako IR protokol byl použit rozšířený \textit{NEC IR}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{SmartLED protokol}
 
-Chytré LE diody \textit{WS2812B} komunikují jednoduchým sériovým protokolem.
+Chytré LED \textit{WS2812B} komunikují jednoduchým sériovým protokolem.
 LED pásek je připojen pouze třemi vodiči: napájení, zem a data. Každá LE dioda
 z~příchozivších dat usekne 24 bitů, podle kterých nastaví svou barvu, a zbylé
 bity pošle dát dalším LED. Po delší pauze ($> 50\ us$) se stav LED resetuje,
@@ -70,7 +70,7 @@ i tento projekt. K~procesoru je připojen přijímač \textit{OSRB38C9BA}
 a filtraci, takže do procesoru jde již krásný obdélníkový signál.
 
 Všichni výrobci IR ovladačů sice modulují konzistentně, avšak formát modulovaných
-dat se již mezi výrobci ovladačů liší. Tento projekt využívá rozšířený formát
+dat se mezi výrobci ovladačů liší. Tento projekt využívá rozšířený formát
 \textit{NEC IR}\footnote{\url{https://exploreembedded.com/wiki/NEC_IR_Remote_Control_Interface_with_8051}}.
 Bity jsou kódovány pomocí délek pulsů, měří se vždy od náběžné k~náběžné hraně,
 na náběžné hrany je tedy možno synchronizovat. Protokol přenáší
@@ -80,7 +80,7 @@ na náběžné hrany je tedy možno synchronizovat. Protokol přenáší
 \item adresu ovladače,
 \item logickou negaci adresy ovladače (pro kontrolu),
 \item kód příkazu,
-\item logickou inverzi kódu příkazu (pro kontrolu).
+\item logickou negaci kódu příkazu (pro kontrolu).
 \end{compactenum}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -89,7 +89,7 @@ na náběžné hrany je tedy možno synchronizovat. Protokol přenáší
 IR přijímač je připojen na napájecí napětí desky $+5\ V$, datový vodič je
 připojen na pin \textit{RA0} (aby bylo možné využít \textit{capture režim}
 procesoru).  Pro správný příjem signálu je nutné odstranit kondenzátor
-\textit{C12}, který je k~tomuto pinu přidružen.
+\textit{C12}, který je k~tomuto pinu připojen.
 
 LED pásek je připojen na pin \textit{RA0} (může být připojen na libovolný
 výstupní pin, tento byl zvolen pro snadnou dostupnost).
@@ -102,7 +102,7 @@ není využit.
 
 Program očekává $46$ diod na LED pásku. Po startu všechny LED zhasne a vyčkává
 na stisk tlačítka ovládače. Na ovladači je možné zvolit jeden z~předpřipravených
-módu:
+módu.
 
 \begin{compactenum}
 \item Svítí konkrétní barva (červená, zelená, žlutá, modrá, bílá).
@@ -111,7 +111,7 @@ módu:
 \item Mód \textit{Knight Rider}: po pásku běhá červená barva.
 \end{compactenum}
 
-Tlačítky \texttt{Ch+} a \texttt{Ch-} je možné ovládat intenzit barev.
+Tlačítky \texttt{Ch+} a \texttt{Ch-} je možné ovládat intenzitu barev.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Implementace}
@@ -124,17 +124,21 @@ Firmware je psaný modulárně, každý soubor se stará vždy o~jednu věc:
 \end{compactitem}
 
 Největším problémem v~celém FW byla komunikace s~LED páskem: protokol, kterým
-LED komunikují, je totiž velice rychlý. PIC nemá žádnou nativní podporu pro
-tento protokol, je tedy nutné data generovat manuálně bit po bitu. To znamená
-rozlišovat mezi intervaly v~řádu desítek pikosekund a to vše na frekvenci $16\
-MHz$ interního oscilátoru. Firmware byl upraven tedy tak, aby plně využíval
-\textit{PLL} procesoru, frekvence tedy byla navýšena na $64\ MHz$. Časy
-protokolu jsou tak krátké, že použití časovače nepřichází v~úvahu. Signál je
-tedy generován jedním blokujícím voláním funkce, které provádí čekání pomocí
-operace \texttt{Nop}.  Navíc bylo nutné ručně \textit{unrollovat} cyklus
-odesílající oněch 24 bitů pro každou LED, protože režie cyklu byla tak velká,
-že nebylo možné dodržet časování protokolu. Mezi jednotlivými LED je větší
-pauza, než protokol dovoluje, avšak zdá se, že s~tím LED nemají problém.
+LED komunikují, je totiž velice rychlý. PIC pro tento protokol nemá nativní
+podporu, je tedy nutné data generovat manuálně bit po bitu. To znamená
+rozlišovat mezi intervaly v~řádu desítek nanosekund a to vše na frekvenci $16\
+MHz$ interního oscilátoru.
+
+Firmware byl upraven tak, aby využíval \textit{PLL} procesoru,
+frekvence tedy byla navýšena na $64\ MHz$. Časy protokolu jsou tak krátké, že
+použití časovače nepřichází v~úvahu. Signál je tedy generován jedním blokujícím
+voláním funkce, které provádí čekání pomocí operace \texttt{Nop}.  Navíc bylo
+nutné ručně \textit{unrollovat} cyklus odesílající oněch 24 bitů pro každou
+LED, protože režie cyklu byla tak velká, že nebylo možné dodržet časování
+protokolu.
+
+Mezi daty jednotlivých LED je větší pauza, než protokol dovoluje, avšak zdá se,
+že s~tím LED nemají problém.
 
 Příjem IR signálu je postaven na \textit{capture feature} procesoru, která
 umožňuje přesně měřit periodu vstupního signálu. Pro toto měření je použit
@@ -148,12 +152,12 @@ Zbytek kódu je poměrně přímočarý a bez zásadních záludností.
 Překvapilo mě, jak velký boj byl s~generováním signálu pro \textit{SmartLED}.
 Díval jsem se do implementace knihovny
 \textit{FastLED}\footnote{\url{https://github.com/FastLED/FastLED}}, která
-implementuje komunikaci právě s~těmito LED na platformách, jako třeba Arduino.
+implementuje komunikaci právě s~těmito LED na platformách jako třeba Arduino.
 Po projití části kódu jsem k~této knihovně získal respekt. Zjistil jsem, že
-častým trikem pro generování signálu je využít SPI (data tohoto formátu na něm
-jsou vytvořit) kombinovaný s~\textit{DMA}. Bohužel, \textit{DMA} není na
-procesorech rodiny \textit{PIC18F46} k~dispozici (umožňují jej až 32-bitové
-PICy). Proto jsem tento přístup ani nezkoušel.
+častým trikem pro generování signálu je využít SPI (data formátu
+\textit{SmartLED} na něm jdou vytvořit) kombinovaný s~\textit{DMA}. Bohužel,
+\textit{DMA} není na procesorech rodiny \textit{PIC18F46} k~dispozici (umožňují
+jej až 32-bitové PICy). Proto jsem tento přístup ani nezkoušel.
 
 Přesně pro takovéto signály se hodí moderní periferie procesorů, například
 ESP32 má přímo hardwarový generátor, který by tento typ signálu zvládl hravě
