@@ -11,6 +11,7 @@
 
 typedef void (*smartled_mode_t)();
 volatile smartled_mode_t smartled_mode;
+volatile uint8_t color_intensity = 0x33;
 
 void mode_red();
 void mode_green();
@@ -56,6 +57,13 @@ void ir_received(uint8_t addr, uint8_t command) {
         smartled_mode = &mode_blue;
     else if (command == 5) // 2
         smartled_mode = &mode_rgb_moving;
+    else if (command == 16) { // arrow down
+        if (color_intensity >= 10)
+            color_intensity -= 10;
+    } else if (command == 12) { // arrow up
+        if (color_intensity <= 245)
+            color_intensity += 10;
+    }
 }
 
 void init() {
@@ -78,13 +86,13 @@ void init() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RGB led_red(uint16_t ledi, void* data) { return sl_rgb(0x33, 0x00, 0x00); }
+RGB led_red(uint16_t ledi, void* data) { return sl_rgb(color_intensity, 0x00, 0x00); }
 void mode_red() { sl_set_leds(&led_red, NULL); }
-RGB led_green(uint16_t ledi, void* data) { return sl_rgb(0x00, 0x33, 0x00); }
+RGB led_green(uint16_t ledi, void* data) { return sl_rgb(0x00, color_intensity, 0x00); }
 void mode_green() { sl_set_leds(&led_green, NULL); }
-RGB led_yellow(uint16_t ledi, void* data) { return sl_rgb(0x33, 0x33, 0x00); }
+RGB led_yellow(uint16_t ledi, void* data) { return sl_rgb(color_intensity, color_intensity, 0x00); }
 void mode_yellow() { sl_set_leds(&led_yellow, NULL); }
-RGB led_blue(uint16_t ledi, void* data) { return sl_rgb(0x00, 0x00, 0x33); }
+RGB led_blue(uint16_t ledi, void* data) { return sl_rgb(0x00, 0x00, color_intensity); }
 void mode_blue() { sl_set_leds(&led_blue, NULL); }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -92,9 +100,9 @@ void mode_blue() { sl_set_leds(&led_blue, NULL); }
 RGB led_rgb_moving(uint16_t ledi, void* data) {
     uint8_t offset = (uint8_t)data;
     RGB rgb;
-    rgb.r = (ledi % 3 == ((0+offset) % 3)) ? 0x0A : 0;
-    rgb.g = (ledi % 3 == ((1+offset) % 3)) ? 0x0A : 0;
-    rgb.b = (ledi % 3 == ((2+offset) % 3)) ? 0x0A : 0;
+    rgb.r = (ledi % 3 == ((0+offset) % 3)) ? color_intensity : 0;
+    rgb.g = (ledi % 3 == ((1+offset) % 3)) ? color_intensity : 0;
+    rgb.b = (ledi % 3 == ((2+offset) % 3)) ? color_intensity : 0;
     return rgb;
 }
 
