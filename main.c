@@ -1,36 +1,55 @@
 #include <xc.h>
 #include "simdelay.h"
+#include "smartled.h"
 
 #pragma config WDTEN = OFF
 #pragma config FOSC = INTIO7
 #pragma config MCLRE = EXTMCLR
 #pragma config FCMEN = ON
 
+void __interrupt(high_priority) MyHighIsr(void) {
+    if (PIR1bits.TMR1IF) {
+        //sl_tmr1_overflow();
+        LATDbits.LD1 = !LATDbits.LD1;
+        TMR1 = 0xFFFF - 13;
+        PIR1bits.TMR1IF = 0;        
+    }}
+
+void __interrupt(low_priority) MyLowIsr(void) {
+
+}
+
+
 void init() {
     OSCCON = (OSCCON & 0b10001111) | 0b01110000;    // internal oscillator at full speed (16 MHz)
+    OSCTUNEbits.PLLEN = 1; // PLL 4x, speed = 64 MHz
 
-    TRISB = 0b11111111; // five buttons in + unused + PGC, PGD
-    LATB = 0xff;        // pull-up by default
-    ANSELB = 0;         // no ADC inputs
-    
-    TRISD = 0b11000000; // LEDs: 0..5 out; TX2: 6 out (but should be set to '1'); RX2: 7 in (UART2 / USB)
+    TRISD = 0b00000000; // everything out
+    TRISAbits.TRISA0 = 0;
     LATD = 0b00000000;
+    ANSELB = 0;         // no ADC inputs
     ANSELD = 0;
     
+	INTCONbits.GIE = 1;         // enable global interrupts
+	INTCONbits.GIEL = 1;        // enable low-priority interrupts
+    INTCONbits.GIEH = 1;        // enable high-priority interrupts
+    RCONbits.IPEN = 1;          // allow interrupts globally
+}
+
+RGB led_red(uint16_t ledi, void* data) {
+    return sl_rgb(0x33, 0x00, 0x00);
+}
+
+RGB led_rainbow(uint16_t ledi, void* data) {
+    return sl_rgb(0x88, 0x00, 0x00);
 }
 
 void main(void) {
-    init();
+    init();    
     
-    for(;;){
-        
-       LATD = ~LATD;         
-           
-       DelayMs(200);
-       DelayMs(200);
-       DelayMs(200);
-       DelayMs(200);
-       DelayMs(200);
+    while (true) {
+        sl_set_leds(&led_red, NULL);
+        DelayMs(16);
     }
 }
 
