@@ -12,6 +12,7 @@
 typedef void (*smartled_mode_t)();
 volatile smartled_mode_t smartled_mode;
 volatile uint8_t color_intensity = 0x33;
+volatile RGB color_same;
 
 void mode_red();
 void mode_green();
@@ -19,6 +20,7 @@ void mode_yellow();
 void mode_blue();
 void mode_rgb_moving();
 void mode_off();
+void mode_gradient();
 
 void __interrupt(high_priority) MyHighIsr(void) {
 
@@ -55,8 +57,10 @@ void ir_received(uint8_t addr, uint8_t command) {
         smartled_mode = &mode_yellow;
     else if (command == 78) // blue button
         smartled_mode = &mode_blue;
-    else if (command == 5) // 2
+    else if (command == 5) // 1
         smartled_mode = &mode_rgb_moving;
+    else if (command == 6) // 2
+        smartled_mode = &mode_gradient;
     else if (command == 16) { // arrow down
         if (color_intensity >= 10)
             color_intensity -= 10;
@@ -86,14 +90,15 @@ void init() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RGB led_red(uint16_t ledi, void* data) { return sl_rgb(color_intensity, 0x00, 0x00); }
-void mode_red() { sl_set_leds(&led_red, NULL); }
-RGB led_green(uint16_t ledi, void* data) { return sl_rgb(0x00, color_intensity, 0x00); }
-void mode_green() { sl_set_leds(&led_green, NULL); }
-RGB led_yellow(uint16_t ledi, void* data) { return sl_rgb(color_intensity, color_intensity, 0x00); }
-void mode_yellow() { sl_set_leds(&led_yellow, NULL); }
-RGB led_blue(uint16_t ledi, void* data) { return sl_rgb(0x00, 0x00, color_intensity); }
-void mode_blue() { sl_set_leds(&led_blue, NULL); }
+RGB led_same(uint16_t ledi, void* data) {
+    return (*(RGB*)data);
+}
+
+void mode_off(ir_set_func func) { color_same = sl_rgb(0x00, 0x00, 0x00); sl_set_leds(&led_same, &color_same); }
+void mode_red() { color_same = sl_rgb(color_intensity, 0x00, 0x00); sl_set_leds(&led_same, &color_same); }
+void mode_green() { color_same = sl_rgb(0x00, color_intensity, 0x00); sl_set_leds(&led_same, &color_same); }
+void mode_yellow() { color_same = sl_rgb(color_intensity, color_intensity, 0x00); sl_set_leds(&led_same, &color_same); }
+void mode_blue() { color_same = sl_rgb(0x00, 0x00, color_intensity); sl_set_leds(&led_same, &color_same); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -124,12 +129,20 @@ void mode_rgb_moving() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RGB led_off(uint16_t ledi, void* data) {
-    return sl_rgb(0x00, 0x00, 0x00);
-}
-
-void mode_off(ir_set_func func) {
-    sl_set_leds(&led_off, NULL);
+void mode_gradient() {
+    static uint8_t counter = 0;
+    
+    if (counter == 0)
+        sl_set_leds(&led_rgb_moving, (void*)0);
+    else if (counter == 2)
+        sl_set_leds(&led_rgb_moving, (void*)1);
+    else if (counter == 4)
+        sl_set_leds(&led_rgb_moving, (void*)2);
+    
+    counter++;
+    
+    if (counter == 6)
+        counter = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
