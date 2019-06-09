@@ -18,6 +18,7 @@ void mode_red();
 void mode_green();
 void mode_yellow();
 void mode_blue();
+void mode_white();
 void mode_rgb_moving();
 void mode_off();
 void mode_gradient();
@@ -61,6 +62,8 @@ void ir_received(uint8_t addr, uint8_t command) {
         smartled_mode = &mode_rgb_moving;
     else if (command == 6) // 2
         smartled_mode = &mode_gradient;
+    else if (command == 7) // 3
+        smartled_mode = &mode_white;
     else if (command == 16) { // arrow down
         if (color_intensity >= 10)
             color_intensity -= 10;
@@ -94,11 +97,12 @@ RGB led_same(uint16_t ledi, void* data) {
     return (*(RGB*)data);
 }
 
-void mode_off(ir_set_func func) { color_same = sl_rgb(0x00, 0x00, 0x00); sl_set_leds(&led_same, &color_same); }
-void mode_red() { color_same = sl_rgb(color_intensity, 0x00, 0x00); sl_set_leds(&led_same, &color_same); }
-void mode_green() { color_same = sl_rgb(0x00, color_intensity, 0x00); sl_set_leds(&led_same, &color_same); }
-void mode_yellow() { color_same = sl_rgb(color_intensity, color_intensity, 0x00); sl_set_leds(&led_same, &color_same); }
-void mode_blue() { color_same = sl_rgb(0x00, 0x00, color_intensity); sl_set_leds(&led_same, &color_same); }
+void mode_off(ir_set_func func) { color_same = sl_rgb(0x00, 0x00, 0x00); sl_set_leds(&led_same, (void*)&color_same); }
+void mode_red() { color_same = sl_rgb(color_intensity, 0x00, 0x00); sl_set_leds(&led_same, (void*)&color_same); }
+void mode_green() { color_same = sl_rgb(0x00, color_intensity, 0x00); sl_set_leds(&led_same, (void*)&color_same); }
+void mode_yellow() { color_same = sl_rgb(color_intensity, color_intensity, 0x00); sl_set_leds(&led_same, (void*)&color_same); }
+void mode_blue() { color_same = sl_rgb(0x00, 0x00, color_intensity); sl_set_leds(&led_same, (void*)&color_same); }
+void mode_white() { color_same = sl_rgb(color_intensity, color_intensity, color_intensity); sl_set_leds(&led_same, (void*)&color_same); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -116,14 +120,14 @@ void mode_rgb_moving() {
     
     if (counter == 0)
         sl_set_leds(&led_rgb_moving, (void*)0);
-    else if (counter == 2)
+    else if (counter == 20)
         sl_set_leds(&led_rgb_moving, (void*)1);
-    else if (counter == 4)
+    else if (counter == 40)
         sl_set_leds(&led_rgb_moving, (void*)2);
     
     counter++;
     
-    if (counter == 6)
+    if (counter == 60)
         counter = 0;
 }
 
@@ -132,16 +136,30 @@ void mode_rgb_moving() {
 void mode_gradient() {
     static uint8_t counter = 0;
     
-    if (counter == 0)
-        sl_set_leds(&led_rgb_moving, (void*)0);
-    else if (counter == 2)
-        sl_set_leds(&led_rgb_moving, (void*)1);
-    else if (counter == 4)
-        sl_set_leds(&led_rgb_moving, (void*)2);
+    if (counter <= 85) {
+        color_same = sl_rgb(
+                color_intensity - color_intensity*(float)counter/85,
+                color_intensity*(float)counter/85,
+                0x00
+        );
+    } else if (counter > 170) {
+        color_same = sl_rgb(                
+                color_intensity*(float)(counter-170)/85,
+                0x00,
+                color_intensity - color_intensity*(float)(counter-170)/85
+        );
+    } else {
+        color_same = sl_rgb(
+                0x00,
+                color_intensity - color_intensity*(float)(counter-85)/85,                
+                color_intensity*(float)(counter-85)/85
+        );        
+    }
     
-    counter++;
+    sl_set_leds(&led_same, (void*)&color_same);
     
-    if (counter == 6)
+    counter += 2;
+    if (counter >= 250)
         counter = 0;
 }
 
@@ -153,7 +171,7 @@ void main(void) {
     
     while (true) {
         smartled_mode();
-        DelayMs(100);
+        DelayMs(10);
     }
 }
 
