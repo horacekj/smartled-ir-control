@@ -122,16 +122,15 @@ RGB led_rgb_moving(uint16_t ledi, void* data) {
 void mode_rgb_moving() {
     static uint8_t counter = 0;
     
-    if (counter == 0)
+    if ((counter >= 0) && (counter < 10))
         sl_set_leds(&led_rgb_moving, (void*)0);
-    else if (counter == 20)
+    else if ((counter >= 10) && (counter < 20))
         sl_set_leds(&led_rgb_moving, (void*)1);
-    else if (counter == 40)
+    else if ((counter >= 20) && (counter < 30))
         sl_set_leds(&led_rgb_moving, (void*)2);
     
     counter++;
-    
-    if (counter == 60)
+    if (counter == 30)
         counter = 0;
 }
 
@@ -203,7 +202,7 @@ void main(void) {
     
     while (true) {
         smartled_mode();
-        DelayMs(10);
+        DelayMs(20);
     }
 }
 
