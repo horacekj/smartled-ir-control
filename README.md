@@ -1,4 +1,4 @@
-# SmartLED control via IR
+# SmartLED control via IR remote
 
 This project was created as a final project of PB171 course @ FI MUNI, spring
 2019.
