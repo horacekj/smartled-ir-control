@@ -1,19 +1,25 @@
 #include <xc.h>
 #include "simdelay.h"
 #include "smartled.h"
+#include "ir.h"
 
 #pragma config WDTEN = OFF
 #pragma config FOSC = INTIO7
 #pragma config MCLRE = EXTMCLR
 #pragma config FCMEN = ON
+#pragma config CCP2MX = 0
 
 void __interrupt(high_priority) MyHighIsr(void) {
     if (PIR1bits.TMR1IF) {
-        //sl_tmr1_overflow();
-        LATDbits.LD1 = !LATDbits.LD1;
-        TMR1 = 0xFFFF - 13;
-        PIR1bits.TMR1IF = 0;        
-    }}
+        ir_timer_interrupt();
+        PIR1bits.TMR1IF = 0;
+    }
+    
+    if (PIR2bits.CCP2IF) {
+        ir_edge_interrupt();
+        PIR2bits.CCP2IF = 0;
+    }
+}
 
 void __interrupt(low_priority) MyLowIsr(void) {
 
@@ -25,10 +31,12 @@ void init() {
     OSCTUNEbits.PLLEN = 1; // PLL 4x, speed = 64 MHz
 
     TRISD = 0b00000000; // everything out
-    TRISAbits.TRISA0 = 0;
+    TRISAbits.TRISA0 = 0; // LEDS on RA0 (pot1 disconnected)    
     LATD = 0b00000000;
     ANSELB = 0;         // no ADC inputs
     ANSELD = 0;
+    
+    ir_init();
     
 	INTCONbits.GIE = 1;         // enable global interrupts
 	INTCONbits.GIEL = 1;        // enable low-priority interrupts
@@ -53,11 +61,11 @@ void main(void) {
     init();    
     
     while (true) {        
-        sl_set_leds(&led_mix, 0);
+        sl_set_leds(&led_mix, (void*)0);
         DelayMs(250);
-        sl_set_leds(&led_mix, 1);
+        sl_set_leds(&led_mix, (void*)1);
         DelayMs(250);
-        sl_set_leds(&led_mix, 2);
+        sl_set_leds(&led_mix, (void*)2);
         DelayMs(250);
     }
 }
