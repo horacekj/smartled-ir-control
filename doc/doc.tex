@@ -36,7 +36,7 @@ pásků a IR dálkového ovladače.
 \section{Popis řešení}
 
 Vypracované řešení staví na desce \textit{YuniPIC}, kterou jsme využívali
-v předmětu PB171 během semestru. Řešení nevyužívá žádných specialit desky,
+v~předmětu PB171 během semestru. Řešení nevyužívá žádných specialit desky,
 tato deska byla zvolena pro její snadnou dostupnost. Řešení je psáno na míru
 procesoru PIC18F46K22. Projekt využívá asi nejrozšířenější chytré LED diody
 \textit{WS2812B}, jako IR protokol byl použit rozšířený \textit{NEC IR}.
@@ -46,7 +46,7 @@ procesoru PIC18F46K22. Projekt využívá asi nejrozšířenější chytré LED 
 
 Chytré LE diody \textit{WS2812B} komunikují jednoduchým sériovým protokolem.
 LED pásek je připojen pouze třemi vodiči: napájení, zem a data. Každá LE dioda
-z příchozivších dat usekne 24 bitů, podle kterých nastaví svou barvu, a zbylé
+z~příchozivších dat usekne 24 bitů, podle kterých nastaví svou barvu, a zbylé
 bity pošle dát dalším LED. Po delší pauze ($> 50\ us$) se stav LED resetuje,
 LED tedy další příchozivší data nepřepošle, ale vezme pro sebe.
 
@@ -59,14 +59,14 @@ nula je kódována jako $0.8\ us$ nízké úrovně a $0.45\ us$ vysoké úrovně
 
 Protože IR signálu je kolem nás spousta, téměř všechny bezdrátové IR ovladače
 využívají modulace dat na nosné frekvenci $37.9\ kHz$. Tento princip využívá
-i tento projekt. K procesoru je připojen přijímač \textit{OSRB38C9BA}
+i tento projekt. K~procesoru je připojen přijímač \textit{OSRB38C9BA}
 \footnote{\url{https://www.gme.cz/osrb38c9ba}}, který rovnou řeší demodulaci
 a filtraci, takže do procesoru jde již krásný obdélníkový signál.
 
 Všichni výrobci IR ovladačů sice modulují konzistentně, avšak formát modulovaných
 dat se již mezi výrobci ovladačů liší. Tento projekt využívá rozšířený formát
 \textit{NEC IR}\footnote{\url{https://exploreembedded.com/wiki/NEC_IR_Remote_Control_Interface_with_8051}}.
-Bity jsou kódovány pomocí délek pulsů, měří se vždy od náběžné k náběžné hraně,
+Bity jsou kódovány pomocí délek pulsů, měří se vždy od náběžné k~náběžné hraně,
 na náběžné hrany je tedy možno synchronizovat. Protokol přenáší
 
 \begin{compactenum}
@@ -83,7 +83,7 @@ na náběžné hrany je tedy možno synchronizovat. Protokol přenáší
 IR přijímač je připojen na napájecí napětí desky $+5\ V$, datový vodič je
 připojen na pin \textit{RA0} (aby bylo možné využít \textit{capture režim}
 procesoru).  Pro správný příjem signálu je nutné odstranit kondenzátor
-\textit{C12}, který je k tomuto pinu přidružen.
+\textit{C12}, který je k~tomuto pinu přidružen.
 
 LED pásek je připojen na pin \textit{RA0} (může být připojen na libovolný
 výstupní pin, tento byl zvolen pro snadnou dostupnost).
@@ -95,13 +95,13 @@ není využit.
 \section{Popis činnosti}
 
 Program očekává $46$ diod na LED pásku. Po startu všechny LED zhasne a vyčkává
-na stisk tlačítka ovládače. Na ovladači je možné zvolit jeden z předpřipravených
+na stisk tlačítka ovládače. Na ovladači je možné zvolit jeden z~předpřipravených
 módu:
 
 \begin{compactenum}
 \item Svítí konkrétní barva (červená, zelená, žlutá, modrá, bílá).
-\item Střídají se barvy \texttt{RGBRGB...} a v čase se posouvají.
-\item Všechny LED plynule mění barvu dle barvy duhy (v čase).
+\item Střídají se barvy \texttt{RGBRGB...} a v~čase se posouvají.
+\item Všechny LED plynule mění barvu dle barvy duhy (v~čase).
 \item Mód \textit{Knight Rider}: po pásku běhá červená barva.
 \end{compactenum}
 
@@ -117,18 +117,18 @@ Firmware je psaný modulárně, každý soubor se stará vždy o~jednu věc:
 	\item \texttt{main.c}: spojení modulů, módy pásku.
 \end{compactitem}
 
-Největším problémem v celém FW byla komunikace s LED páskem: protokol, kterým
+Největším problémem v~celém FW byla komunikace s~LED páskem: protokol, kterým
 LED komunikují, je totiž velice rychlý. PIC nemá žádnou nativní podporu pro
 tento protokol, je tedy nutné data generovat manuálně bit po bitu. To znamená
-rozlišovat mezi intervaly v řádu desítek pikosekund a to vše na frekvenci $16\
+rozlišovat mezi intervaly v~řádu desítek pikosekund a to vše na frekvenci $16\
 MHz$ interního oscilátoru. Firmware byl upraven tedy tak, aby plně využíval
 \textit{PLL} procesoru, frekvence tedy byla navýšena na $64\ MHz$. Časy
-protokolu jsou tak krátké, že použití časovače nepřichází v úvahu. Signál je
+protokolu jsou tak krátké, že použití časovače nepřichází v~úvahu. Signál je
 tedy generován jedním blokujícím voláním funkce, které provádí čekání pomocí
 operace \texttt{Nop}.  Navíc bylo nutné ručně \textit{unrollovat} cyklus
 odesílající oněch 24 bitů pro každou LED, protože režie cyklu byla tak velká,
 že nebylo možné dodržet časování protokolu. Mezi jednotlivými LED je větší
-pauza, než protokol dovoluje, avšak zdá se, že s tím LED nemají problém.
+pauza, než protokol dovoluje, avšak zdá se, že s~tím LED nemají problém.
 
 Příjem IR signálu je postaven na \textit{capture feature} procesoru, která
 umožňuje přesně měřit periodu vstupního signálu. Pro toto měření je použit
@@ -139,14 +139,14 @@ Zbytek kódu je poměrně přímočarý a bez zásadních záludností.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Diskuze}
 
-Překvapilo mě, jak velký boj byl s generováním signálu pro \textit{SmartLED}.
+Překvapilo mě, jak velký boj byl s~generováním signálu pro \textit{SmartLED}.
 Díval jsem se do implementace knihovny
 \textit{FastLED}\footnote{\url{https://github.com/FastLED/FastLED}}, která
-implementuje komunikaci právě s těmito LED na platformách, jako třeba Arduino.
-Po projití části kódu jsem k této knihovně získal respekt. Zjistil jsem, že
+implementuje komunikaci právě s~těmito LED na platformách, jako třeba Arduino.
+Po projití části kódu jsem k~této knihovně získal respekt. Zjistil jsem, že
 častým trikem pro generování signálu je využít SPI (data tohoto formátu na něm
-jsou vytvořit) kombinovaný s \textit{DMA}. Bohužel, \textit{DMA} není na
-procesorech rodiny \textit{PIC18F46} k dispozici (umožňují jej až 32-bitové
+jsou vytvořit) kombinovaný s~\textit{DMA}. Bohužel, \textit{DMA} není na
+procesorech rodiny \textit{PIC18F46} k~dispozici (umožňují jej až 32-bitové
 PICy). Proto jsem tento přístup ani nezkoušel.
 
 Přesně pro takovéto signály se hodí moderní periferie procesorů, například
