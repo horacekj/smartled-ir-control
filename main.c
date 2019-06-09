@@ -1,4 +1,5 @@
 #include <xc.h>
+#include <stdlib.h>
 #include "simdelay.h"
 #include "smartled.h"
 #include "ir.h"
@@ -22,6 +23,7 @@ void mode_white();
 void mode_rgb_moving();
 void mode_off();
 void mode_gradient();
+void mode_knight_rider();
 
 void __interrupt(high_priority) MyHighIsr(void) {
 
@@ -64,6 +66,8 @@ void ir_received(uint8_t addr, uint8_t command) {
         smartled_mode = &mode_gradient;
     else if (command == 7) // 3
         smartled_mode = &mode_white;
+    else if (command == 9) // 4
+        smartled_mode = &mode_knight_rider;
     else if (command == 16) { // arrow down
         if (color_intensity >= 10)
             color_intensity -= 10;
@@ -161,6 +165,34 @@ void mode_gradient() {
     counter += 2;
     if (counter >= 250)
         counter = 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+RGB led_knight_rider(uint16_t ledi, void* data) {
+    uint8_t max_pos = (uint8_t)data;
+    const uint8_t WIDTH = 4;
+    RGB color = { .r = 0, .g = 0, .b = 0 };
+    if (abs(ledi-max_pos) < WIDTH)
+        color.r = color_intensity - color_intensity * (float)abs(ledi-max_pos)/WIDTH;
+    return color;
+}
+
+void mode_knight_rider() {
+    static uint8_t max_pos = 0;
+    static uint8_t dir = 0;
+    
+    sl_set_leds(&led_knight_rider, (void*)max_pos);
+    
+    if (dir == 0) {
+        max_pos++;
+        if (max_pos == SL_LEDS_COUNT)
+            dir = 1;
+    } else {
+        max_pos--;
+        if (max_pos == 0)
+            dir = 0;
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
