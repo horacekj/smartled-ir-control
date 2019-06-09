@@ -40,16 +40,25 @@ RGB led_red(uint16_t ledi, void* data) {
     return sl_rgb(0x33, 0x00, 0x00);
 }
 
-RGB led_rainbow(uint16_t ledi, void* data) {
-    return sl_rgb(0x88, 0x00, 0x00);
+RGB led_mix(uint16_t ledi, void* data) {
+    uint8_t offset = (uint8_t)data;
+    RGB rgb;
+    rgb.r = (ledi % 3 == ((0+offset) % 3)) ? 0x0A : 0;
+    rgb.g = (ledi % 3 == ((1+offset) % 3)) ? 0x0A : 0;
+    rgb.b = (ledi % 3 == ((2+offset) % 3)) ? 0x0A : 0;
+    return rgb;
 }
 
 void main(void) {
     init();    
     
-    while (true) {
-        sl_set_leds(&led_red, NULL);
-        DelayMs(16);
+    while (true) {        
+        sl_set_leds(&led_mix, 0);
+        DelayMs(250);
+        sl_set_leds(&led_mix, 1);
+        DelayMs(250);
+        sl_set_leds(&led_mix, 2);
+        DelayMs(250);
     }
 }
 
