@@ -10,6 +10,10 @@
 #pragma config CCP2MX = 0
 
 void __interrupt(high_priority) MyHighIsr(void) {
+
+}
+
+void __interrupt(low_priority) MyLowIsr(void) {
     if (PIR1bits.TMR1IF) {
         ir_timer_interrupt();
         PIR1bits.TMR1IF = 0;
@@ -19,10 +23,6 @@ void __interrupt(high_priority) MyHighIsr(void) {
         ir_edge_interrupt();
         PIR2bits.CCP2IF = 0;
     }
-}
-
-void __interrupt(low_priority) MyLowIsr(void) {
-
 }
 
 void ir_received(uint8_t addr, uint8_t command) {
@@ -58,10 +58,6 @@ RGB led_mix(uint16_t ledi, void* data) {
     rgb.g = (ledi % 3 == ((1+offset) % 3)) ? 0x0A : 0;
     rgb.b = (ledi % 3 == ((2+offset) % 3)) ? 0x0A : 0;
     return rgb;
-}
-
-RGB led_data(uint16_t ledi, void* data) {
-    
 }
 
 void main(void) {
