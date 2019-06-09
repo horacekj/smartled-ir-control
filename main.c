@@ -9,6 +9,13 @@
 #pragma config FCMEN = ON
 #pragma config CCP2MX = 0
 
+typedef void (*smartled_mode_t)();
+volatile smartled_mode_t smartled_mode;
+
+void mode_off();
+void mode_red();
+void mode_rgb_moving();
+
 void __interrupt(high_priority) MyHighIsr(void) {
 
 }
@@ -26,7 +33,21 @@ void __interrupt(low_priority) MyLowIsr(void) {
 }
 
 void ir_received(uint8_t addr, uint8_t command) {
-    LATDbits.LD4 = !LATDbits.LD4;
+    static smartled_mode_t last_mode = &mode_rgb_moving;
+    
+    LATD |= command;
+    
+    if (command == 0) { // ON/OFF button        
+        if (smartled_mode == mode_off) {
+            smartled_mode = last_mode;
+        } else {
+            last_mode = smartled_mode;
+            smartled_mode = &mode_off;
+        }
+    } else if (command == 6) // 1
+        smartled_mode = &mode_red;
+    else if (command == 5) // 2
+        smartled_mode = &mode_rgb_moving;
 }
 
 void init() {
@@ -47,11 +68,19 @@ void init() {
     RCONbits.IPEN = 1;          // allow interrupts globally
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 RGB led_red(uint16_t ledi, void* data) {
     return sl_rgb(0x33, 0x00, 0x00);
 }
 
-RGB led_mix(uint16_t ledi, void* data) {
+void mode_red() {
+    sl_set_leds(&led_red, NULL);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+RGB led_rgb_moving(uint16_t ledi, void* data) {
     uint8_t offset = (uint8_t)data;
     RGB rgb;
     rgb.r = (ledi % 3 == ((0+offset) % 3)) ? 0x0A : 0;
@@ -60,16 +89,41 @@ RGB led_mix(uint16_t ledi, void* data) {
     return rgb;
 }
 
-void main(void) {
-    init();    
+void mode_rgb_moving() {
+    static uint8_t counter = 0;
     
-    while (true) {        
-        sl_set_leds(&led_mix, (void*)0);
-        DelayMs(250);
-        sl_set_leds(&led_mix, (void*)1);
-        DelayMs(250);
-        sl_set_leds(&led_mix, (void*)2);
-        DelayMs(250);
+    if (counter == 0)
+        sl_set_leds(&led_rgb_moving, (void*)0);
+    else if (counter == 2)
+        sl_set_leds(&led_rgb_moving, (void*)1);
+    else if (counter == 4)
+        sl_set_leds(&led_rgb_moving, (void*)2);
+    
+    counter++;
+    
+    if (counter == 6)
+        counter = 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+RGB led_off(uint16_t ledi, void* data) {
+    return sl_rgb(0x00, 0x00, 0x00);
+}
+
+void mode_off() {
+    sl_set_leds(&led_off, NULL);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void main(void) {
+    smartled_mode = &mode_off;
+    init();
+    
+    while (true) {
+        smartled_mode();
+        DelayMs(100);
     }
 }
 

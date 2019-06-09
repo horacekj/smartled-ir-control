@@ -60,7 +60,7 @@ void ir_timer_interrupt() {
         // reset
         last_tick_valid = false;
         receive_state = idle;
-        LATDbits.LD1 = !LATDbits.LD1;
+        LATDbits.LD7 = 1;
         going_to_reset = false;
         return;
     }
@@ -84,8 +84,6 @@ void ir_edge_interrupt() {
 }
 
 void process_edge(uint16_t period) {
-    LATDbits.LD0 = !LATDbits.LD0;
-    
     if ((period > 24000) && (period < 29000)) {
         // period between 12 ms and 14.5 ms (should be 13.5 ms)
         // -> initialize
@@ -95,13 +93,14 @@ void process_edge(uint16_t period) {
         received_data.addr_inv = 0;
         received_data.command = 0;
         received_data.command_inv = 0;
+        LATD = 0;
         
         return;
     }
     
     bit_parse_result r = get_bit(period);
     if (!r.valid) {
-        LATDbits.LD1 = !LATDbits.LD1;
+        LATDbits.LD7 = 1;
         receive_state = idle;
         last_tick_valid = false;
         return;
@@ -145,11 +144,11 @@ bit_parse_result get_bit(uint16_t period) {
 
 void check_and_call() {
     if (received_data.addr != (uint8_t)~(received_data.addr_inv)) {
-        LATDbits.LD2 = !LATDbits.LD2; // DEBUG
+        LATDbits.LD7 = 1; // DEBUG
         return;
     }
     if (received_data.command != (uint8_t)~received_data.command_inv) {
-        LATDbits.LD3 = !LATDbits.LD3; // DEBUG
+        LATDbits.LD7 = 1; // DEBUG
         return;
     }
         
