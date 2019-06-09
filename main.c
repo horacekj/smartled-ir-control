@@ -1,5 +1,4 @@
 #include <xc.h>
-
 #include "simdelay.h"
 
 #pragma config WDTEN = OFF
@@ -7,7 +6,7 @@
 #pragma config MCLRE = EXTMCLR
 #pragma config FCMEN = ON
 
-void init(){
+void init() {
     OSCCON = (OSCCON & 0b10001111) | 0b01110000;    // internal oscillator at full speed (16 MHz)
 
     TRISB = 0b11111111; // five buttons in + unused + PGC, PGD
