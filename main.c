@@ -12,9 +12,12 @@
 typedef void (*smartled_mode_t)();
 volatile smartled_mode_t smartled_mode;
 
-void mode_off();
 void mode_red();
+void mode_green();
+void mode_yellow();
+void mode_blue();
 void mode_rgb_moving();
+void mode_off();
 
 void __interrupt(high_priority) MyHighIsr(void) {
 
@@ -34,7 +37,6 @@ void __interrupt(low_priority) MyLowIsr(void) {
 
 void ir_received(uint8_t addr, uint8_t command) {
     static smartled_mode_t last_mode = &mode_rgb_moving;
-    
     LATD |= command;
     
     if (command == 0) { // ON/OFF button        
@@ -44,8 +46,14 @@ void ir_received(uint8_t addr, uint8_t command) {
             last_mode = smartled_mode;
             smartled_mode = &mode_off;
         }
-    } else if (command == 6) // 1
+    } else if (command == 75) // red button
         smartled_mode = &mode_red;
+    else if (command == 76) // green button
+        smartled_mode = &mode_green;
+    else if (command == 77) // yellow button
+        smartled_mode = &mode_yellow;
+    else if (command == 78) // blue button
+        smartled_mode = &mode_blue;
     else if (command == 5) // 2
         smartled_mode = &mode_rgb_moving;
 }
@@ -70,13 +78,14 @@ void init() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RGB led_red(uint16_t ledi, void* data) {
-    return sl_rgb(0x33, 0x00, 0x00);
-}
-
-void mode_red() {
-    sl_set_leds(&led_red, NULL);
-}
+RGB led_red(uint16_t ledi, void* data) { return sl_rgb(0x33, 0x00, 0x00); }
+void mode_red() { sl_set_leds(&led_red, NULL); }
+RGB led_green(uint16_t ledi, void* data) { return sl_rgb(0x00, 0x33, 0x00); }
+void mode_green() { sl_set_leds(&led_green, NULL); }
+RGB led_yellow(uint16_t ledi, void* data) { return sl_rgb(0x33, 0x33, 0x00); }
+void mode_yellow() { sl_set_leds(&led_yellow, NULL); }
+RGB led_blue(uint16_t ledi, void* data) { return sl_rgb(0x00, 0x00, 0x33); }
+void mode_blue() { sl_set_leds(&led_blue, NULL); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -111,7 +120,7 @@ RGB led_off(uint16_t ledi, void* data) {
     return sl_rgb(0x00, 0x00, 0x00);
 }
 
-void mode_off() {
+void mode_off(ir_set_func func) {
     sl_set_leds(&led_off, NULL);
 }
 

@@ -10,10 +10,10 @@ typedef struct {
 
 #define SL_LEDS_COUNT 46
 
-typedef RGB (*set_func)(uint16_t ledi, void* data);
+typedef RGB (*ir_set_func)(uint16_t ledi, void* data);
 
 RGB sl_rgb(uint8_t r, uint8_t g, uint8_t b);
-void sl_set_leds(set_func f, void* data);
+void sl_set_leds(ir_set_func f, void* data);
 
 #endif	/* SMARTLED_H */
 

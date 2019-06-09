@@ -2,7 +2,7 @@
 #include <xc.h>
 #include "smartled.h"
 
-set_func sl_current_set_func = NULL;
+ir_set_func sl_current_set_func = NULL;
 void* sl_current_data = NULL;
 uint16_t sl_led_count = 0;
 int32_t current_led_index = -1;
@@ -22,7 +22,7 @@ RGB sl_rgb(uint8_t r, uint8_t g, uint8_t b) {
     return colors;
 }
 
-void sl_set_leds(set_func f, void* data) {
+void sl_set_leds(ir_set_func f, void* data) {
     sl_current_set_func = f;
     sl_current_data = data;
     RGB output[SL_LEDS_COUNT];
