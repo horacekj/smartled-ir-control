@@ -3,7 +3,7 @@
     <type>com.microchip.mplab.nbide.embedded.makeproject</type>
     <configuration>
         <data xmlns="http://www.netbeans.org/ns/make-project/1">
-            <name>yunitest</name>
+            <name>smartled</name>
             <creation-uuid>706312ee-ac9c-4e8a-9fc7-5c1613f5406f</creation-uuid>
             <make-project-type>0</make-project-type>
             <c-extensions>c</c-extensions>

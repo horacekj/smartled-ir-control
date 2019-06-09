@@ -1,14 +1,11 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
 #include <xc.h>
+
 #include "simdelay.h"
 
 #pragma config WDTEN = OFF
 #pragma config FOSC = INTIO7
 #pragma config MCLRE = EXTMCLR
 #pragma config FCMEN = ON
-
 
 void init(){
     OSCCON = (OSCCON & 0b10001111) | 0b01110000;    // internal oscillator at full speed (16 MHz)
