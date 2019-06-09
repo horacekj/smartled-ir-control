@@ -25,6 +25,9 @@ void __interrupt(low_priority) MyLowIsr(void) {
 
 }
 
+void ir_received(uint8_t addr, uint8_t command) {
+    LATDbits.LD4 = !LATDbits.LD4;
+}
 
 void init() {
     OSCCON = (OSCCON & 0b10001111) | 0b01110000;    // internal oscillator at full speed (16 MHz)
@@ -36,7 +39,7 @@ void init() {
     ANSELB = 0;         // no ADC inputs
     ANSELD = 0;
     
-    ir_init();
+    ir_init(&ir_received);
     
 	INTCONbits.GIE = 1;         // enable global interrupts
 	INTCONbits.GIEL = 1;        // enable low-priority interrupts
@@ -55,6 +58,10 @@ RGB led_mix(uint16_t ledi, void* data) {
     rgb.g = (ledi % 3 == ((1+offset) % 3)) ? 0x0A : 0;
     rgb.b = (ledi % 3 == ((2+offset) % 3)) ? 0x0A : 0;
     return rgb;
+}
+
+RGB led_data(uint16_t ledi, void* data) {
+    
 }
 
 void main(void) {
