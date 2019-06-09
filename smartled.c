@@ -32,7 +32,7 @@ void sl_set_leds(ir_set_func f, void* data) {
         output[i].g = reverse_bits(output[i].g);
         output[i].b = reverse_bits(output[i].b);
     }
-    
+
 #define SEND_SINGLE_BIT() if (bits & 1) { \
         LATAbits.LA0 = 1; \
         bits >>= 1; \
@@ -46,10 +46,10 @@ void sl_set_leds(ir_set_func f, void* data) {
         LATAbits.LA0 = 0; \
         Nop(); Nop(); Nop(); Nop(); Nop(); \
     }
-    
+
     for (uint16_t i = 0; i < SL_LEDS_COUNT; i++) {
         uint24_t bits = ((uint24_t)output[i].b << 16) + ((uint24_t)output[i].r << 8) + (output[i].g);
-        
+
         SEND_SINGLE_BIT();
         SEND_SINGLE_BIT();
         SEND_SINGLE_BIT();

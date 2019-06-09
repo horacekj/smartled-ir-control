@@ -34,7 +34,7 @@ void __interrupt(low_priority) MyLowIsr(void) {
         ir_timer_interrupt();
         PIR1bits.TMR1IF = 0;
     }
-    
+
     if (PIR2bits.CCP2IF) {
         ir_edge_interrupt();
         PIR2bits.CCP2IF = 0;
@@ -44,8 +44,8 @@ void __interrupt(low_priority) MyLowIsr(void) {
 void ir_received(uint8_t addr, uint8_t command) {
     static smartled_mode_t last_mode = &mode_rgb_moving;
     LATD |= command;
-    
-    if (command == 0) { // ON/OFF button        
+
+    if (command == 0) { // ON/OFF button
         if (smartled_mode == mode_off) {
             smartled_mode = last_mode;
         } else {
@@ -82,13 +82,13 @@ void init() {
     OSCTUNEbits.PLLEN = 1; // PLL 4x, speed = 64 MHz
 
     TRISD = 0b00000000; // everything out
-    TRISAbits.TRISA0 = 0; // LEDS on RA0 (pot1 disconnected)    
+    TRISAbits.TRISA0 = 0; // LEDS on RA0 (pot1 disconnected)
     LATD = 0b00000000;
     ANSELB = 0;         // no ADC inputs
     ANSELD = 0;
-    
+
     ir_init(&ir_received);
-    
+
 	INTCONbits.GIE = 1;         // enable global interrupts
 	INTCONbits.GIEL = 1;        // enable low-priority interrupts
     INTCONbits.GIEH = 1;        // enable high-priority interrupts
@@ -121,14 +121,14 @@ RGB led_rgb_moving(uint16_t ledi, void* data) {
 
 void mode_rgb_moving() {
     static uint8_t counter = 0;
-    
+
     if ((counter >= 0) && (counter < 10))
         sl_set_leds(&led_rgb_moving, (void*)0);
     else if ((counter >= 10) && (counter < 20))
         sl_set_leds(&led_rgb_moving, (void*)1);
     else if ((counter >= 20) && (counter < 30))
         sl_set_leds(&led_rgb_moving, (void*)2);
-    
+
     counter++;
     if (counter == 30)
         counter = 0;
@@ -138,7 +138,7 @@ void mode_rgb_moving() {
 
 void mode_gradient() {
     static uint8_t counter = 0;
-    
+
     if (counter <= 85) {
         color_same = sl_rgb(
                 color_intensity - color_intensity*(float)counter/85,
@@ -146,7 +146,7 @@ void mode_gradient() {
                 0x00
         );
     } else if (counter > 170) {
-        color_same = sl_rgb(                
+        color_same = sl_rgb(
                 color_intensity*(float)(counter-170)/85,
                 0x00,
                 color_intensity - color_intensity*(float)(counter-170)/85
@@ -154,13 +154,13 @@ void mode_gradient() {
     } else {
         color_same = sl_rgb(
                 0x00,
-                color_intensity - color_intensity*(float)(counter-85)/85,                
+                color_intensity - color_intensity*(float)(counter-85)/85,
                 color_intensity*(float)(counter-85)/85
-        );        
+        );
     }
-    
+
     sl_set_leds(&led_same, (void*)&color_same);
-    
+
     counter += 2;
     if (counter >= 250)
         counter = 0;
@@ -180,9 +180,9 @@ RGB led_knight_rider(uint16_t ledi, void* data) {
 void mode_knight_rider() {
     static uint8_t max_pos = 0;
     static uint8_t dir = 0;
-    
+
     sl_set_leds(&led_knight_rider, (void*)max_pos);
-    
+
     if (dir == 0) {
         max_pos++;
         if (max_pos == SL_LEDS_COUNT)
@@ -199,7 +199,7 @@ void mode_knight_rider() {
 void main(void) {
     smartled_mode = &mode_off;
     init();
-    
+
     while (true) {
         smartled_mode();
         DelayMs(20);
